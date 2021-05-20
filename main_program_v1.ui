@@ -28,7 +28,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>Sneak Archcompiler</string>
+   <string>Sneaky compile and copy tool v.01 build 333</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QTextEdit" name="te_source">

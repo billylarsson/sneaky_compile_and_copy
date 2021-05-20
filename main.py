@@ -121,7 +121,8 @@ class tech:
     @staticmethod
     def save_setting(setting_column, object):
         """
-        updates sqlite settings table with the column and bool or other value from object
+        updates sqlite settings table with the column and bool
+        or other value from object
         if object is string, that works!
         :param setting_column: string
         :param object: any Qt-object or string
@@ -134,25 +135,28 @@ class tech:
         if type(object) == str:
             update(setting_column, object)
 
+        """ radios and checkboxes"""
         try:
             if object.isChecked():
                 update(setting_column, object.isChecked())
             else:
                 update(setting_column, object.isChecked())
-        except:
-            pass
+            return
+        except: pass
 
+        """ textedits """
         try:
             if object.currentText():
                 update(setting_column, object.currentText())
-        except:
-            pass
+                return
+        except: pass
 
+        """ plaintextedits """
         try:
             if object.toPlainText():
                 update(setting_column, object.toPlainText())
-        except:
-            pass
+                return
+        except: pass
 
     @staticmethod
     def retrieve_setting(index):
@@ -180,7 +184,10 @@ def create_shared_object(path):
 class main(QtWidgets.QMainWindow):
     def __init__(self):
         super(main, self).__init__()
-        uic.loadUi('main_program_v1.ui', self)
+        if os.path.exists('/home/plutonergy/Coding/sneaky_compile_and_copy/main_program_v1.ui'):
+            uic.loadUi('/home/plutonergy/Coding/sneaky_compile_and_copy/main_program_v1.ui', self)    
+        else:
+            uic.loadUi('main_program_v1.ui', self)
         self.move(1200,150)
         self.setStyleSheet('background-color: gray; color: black')
         self.threadpool_main = QThreadPool()
@@ -439,6 +446,7 @@ class main(QtWidgets.QMainWindow):
         :param destination_path: string
         :return: bool
         """
+        print(source_path)
         if not os.path.exists(source_path):
             self.status_bar.showMessage('Source path has covid!')
             return False
