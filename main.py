@@ -26,7 +26,7 @@ else:
 sqliteconnection = sqlite3.connect(sqlite_path)
 sqlitecursor = sqliteconnection.cursor()
 
-white_extensions = ['.ui', '.py', '.so', '.pyx', '.zip', '.txt', '.ini']
+white_extensions = ['.ui', '.py', '.so', '.pyx', '.zip', '.txt', '.ini', '.c']
 white_dirs = ['gui', 'img', 'mkm_expansion_data']
 black_dirs = ['__pycache__', 'venv']
 
@@ -106,6 +106,7 @@ class DB: # local database
 
     copy_pyx_files = db_sqlite('settings', 'copy_pyx_files', 'integer')
     copy_ini_files = db_sqlite('settings', 'copy_ini_files', 'integer')
+    copy_c_files = db_sqlite('settings', 'copy_c_files', 'integer')
     force_update = db_sqlite('settings', 'force_update', 'integer')
     program_name = db_sqlite('settings', 'program_name')
     presets = db_sqlite('settings', 'presets')
@@ -200,6 +201,7 @@ class main(QtWidgets.QMainWindow):
         self.btn_start_compile.clicked.connect(self.start_compiling)
         self.check_copy_pyx.clicked.connect(partial(tech.save_setting, 'copy_pyx_files', self.check_copy_pyx))
         self.check_copy_ini.clicked.connect(partial(tech.save_setting, 'copy_ini_files', self.check_copy_ini))
+        self.check_copy_c.clicked.connect(partial(tech.save_setting, 'copy_c_files', self.check_copy_c))
         self.check_force.clicked.connect(partial(tech.save_setting, 'force_update', self.check_force))
         self.combo_name.currentIndexChanged.connect(self.load_preset)
         # TRIGGER <
@@ -240,7 +242,8 @@ class main(QtWidgets.QMainWindow):
             self.check_force: 'force_update',
             self.combo_name: 'program_name',
             self.check_copy_pyx: 'copy_pyx_files',
-            self.check_copy_ini: 'copy_ini_files'
+            self.check_copy_ini: 'copy_ini_files',
+            self.check_copy_c: 'copy_c_files'
         }
 
         for widget, string in cycle.items():
@@ -440,6 +443,9 @@ class main(QtWidgets.QMainWindow):
         if not self.check_copy_ini.isChecked() and ext == '.ini':
             remover(all_files, ext)
 
+        if not self.check_copy_c.isChecked() and ext == '.c':
+            remover(all_files, ext)
+
         return all_files
 
     def copy_tree(self, source_dir, destination_dir):
@@ -452,7 +458,6 @@ class main(QtWidgets.QMainWindow):
         :param destination_path: string
         :return: bool
         """
-        print(source_path)
         if not os.path.exists(source_path):
             self.status_bar.showMessage('Source path has covid!')
             return False
@@ -501,12 +506,38 @@ class main(QtWidgets.QMainWindow):
         with sqliteconnection:
             sqlitecursor.execute('update settings set presets = (?) where id is 1', (values,))
 
+    def save_special_files_in_special_folder(self, tmp_dir, extension, folder):
+        """
+        gather all files with .pyx and move them to new folder such as /pyx-files/
+        :param tmp_dir: source folder to look for files
+        :param extension: extension such as .pyx, .c
+        :param folder: folder to create for those files like 'pyx-source'
+        """
+        if self.check_copy_c.isChecked():
+            source_dir = tmp_dir + f'/{folder}'
+            if not os.path.exists(source_dir):
+                pathlib.Path(source_dir).mkdir(parents=True)
+
+            for walk in os.walk(tmp_dir):
+                for file in walk[2]:
+                    f = f'{walk[0]}/{file}'
+                    ext = f.split('.')
+                    if ext[-1] == extension:
+                        destination_file = f'{source_dir}/{file}'
+                        shutil.move(f, destination_file)
+
     def start_compiling(self):
         """
         everything starts here
         """
         source_path = self.te_source.toPlainText()
         destination_path = self.te_dest.toPlainText()
+
+        source_path = source_path.replace('file://', "")
+        destination_path = destination_path.replace('file://', "")
+
+        source_path = source_path.strip()
+        destination_path = destination_path.strip()
 
         if not self.pre_checking(source_path, destination_path):
             return
@@ -520,9 +551,14 @@ class main(QtWidgets.QMainWindow):
 
         def finished(self):
             complete_files = self.find_files_of_interest(tmp_dir)
-            complete_files = self.remove_ext_files_before_final(complete_files, '.pyx')
-            complete_files = self.remove_ext_files_before_final(complete_files, '.ini')
+
+            cfcycle = ['.pyx', '.ini', '.c']
+            for extension in cfcycle:
+                complete_files = self.remove_ext_files_before_final(complete_files, extension)
+
             self.delete_unwanted_files_from_tmp_dir(complete_files, tmp_dir)
+            self.save_special_files_in_special_folder(tmp_dir, 'c', 'source_c')
+            self.save_special_files_in_special_folder(tmp_dir, 'pyx', 'source_pyx')
             self.copy_tree(tmp_dir, destination_path)
 
             end_time = time.time() - self.start_time
