@@ -16,6 +16,8 @@ import tempfile
 import time
 import traceback
 
+os.chdir(os.path.realpath(__file__)[0:os.path.realpath(__file__).rfind('/')])
+
 if os.path.exists('/home/plutonergy/Documents'):
     sqlite_path = '/home/plutonergy/Documents/sneaky_compiler_v2.sqlite'
 else:
@@ -26,7 +28,7 @@ sqlitecursor = sqliteconnection.cursor()
 
 white_extensions = ['.ui', '.py', '.so', '.pyx', '.zip', '.txt', '.ini']
 white_dirs = ['gui', 'img', 'mkm_expansion_data']
-black_dirs = ['__pycache__']
+black_dirs = ['__pycache__', 'venv']
 
 global techdict
 techdict = {}
@@ -184,10 +186,7 @@ def create_shared_object(path):
 class main(QtWidgets.QMainWindow):
     def __init__(self):
         super(main, self).__init__()
-        if os.path.exists('/home/plutonergy/Coding/sneaky_compile_and_copy/main_program_v1.ui'):
-            uic.loadUi('/home/plutonergy/Coding/sneaky_compile_and_copy/main_program_v1.ui', self)    
-        else:
-            uic.loadUi('main_program_v1.ui', self)
+        uic.loadUi('main_program_v1.ui', self)
         self.move(1200,150)
         self.setStyleSheet('background-color: gray; color: black')
         self.threadpool_main = QThreadPool()
@@ -206,6 +205,10 @@ class main(QtWidgets.QMainWindow):
         # TRIGGER <
 
         self.show()
+
+        if len(sys.argv) > 1 and sys.argv[1] == 'autostart':
+            self.start_compiling()
+
 
     def mousePressEvent(self, QMouseEvent):
         self.load_preset()
@@ -415,6 +418,9 @@ class main(QtWidgets.QMainWindow):
                 for walkwalk in os.walk(iterdir):
                     if walkwalk[1] == [] and walkwalk[2] == []:
                         shutil.rmtree(walkwalk[0])
+                    if walkwalk[1] in black_dirs:
+                        print(walkwalk[1])
+
 
     def remove_ext_files_before_final(self, all_files, ext):
         """
@@ -504,6 +510,8 @@ class main(QtWidgets.QMainWindow):
 
         if not self.pre_checking(source_path, destination_path):
             return
+        else:
+            self.status_bar.showMessage('Running . . . ')
 
         if os.path.exists('/mnt/ramdisk'):
             tmp_dir = f'/mnt/ramdisk/{self.combo_name.currentText()}'
@@ -522,6 +530,10 @@ class main(QtWidgets.QMainWindow):
             self.status_bar.showMessage(message)
             self.save_current_job()
 
+            if len(sys.argv) > 1 and sys.argv[1] == 'autostart':
+                print(message)
+                sys.exit()
+
         self.start_time = time.time()
 
         self.delete_and_fresh_copy(source_path, tmp_dir)
@@ -529,7 +541,6 @@ class main(QtWidgets.QMainWindow):
         save_files = self.check_if_file_is_interesting(save_files)
         pyx_files = self.determine_which_files_to_be_compiled(save_files)
         self.save_md5_hashes(save_files)
-
         thread = Worker(partial(self.compile_list_of_pyxfiles, pyx_files))
         thread.signals.finished.connect(partial(finished, self))
         self.threadpool_main.start(thread)
