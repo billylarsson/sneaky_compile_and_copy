@@ -86,7 +86,7 @@ class FileLabel(HighlightLabel):
             if os.path.getsize(fullpath) / 1000 > 1000:
                 text = f"{round(os.path.getsize(fullpath)/1000000, 1)} mb"
             else:
-                text = f"{round(os.path.getsize(fullpath)/1000)} kb"
+                text = f"{round(os.path.getsize(fullpath)/1000) if round(os.path.getsize(fullpath)/1000) > 0 else 1} kb"
 
             kwgs = dict(text=text, background=DARKCYAN, right=True, vcenter=True, indent=9)
         else:
@@ -102,6 +102,8 @@ class FileLabel(HighlightLabel):
             s.close()
             s.parent.widgets = [x for x in s.parent.widgets if x != s]
 
+        t.close_and_pop(s.main.deleting.widgets)
+        s.main.deletable_files()
         s.main.rearrange_include_and_exclude()
         s.main.visualize_difference()
 
@@ -539,7 +541,7 @@ class Sneaky(QtWidgets.QMainWindow):
             i.bottom.lower()
 
     def get_files_and_folders(s):
-        [t.close_and_pop(x.widgets) for x in (s.included, s.excluded)]
+        [t.close_and_pop(x.widgets) for x in (s.included, s.excluded, s.deleting)]
 
         incfol = [x.lower() for x in s.included_foldernames.text().split()]
         incfil = [x.lower() for x in s.included_filenames.text().split()]

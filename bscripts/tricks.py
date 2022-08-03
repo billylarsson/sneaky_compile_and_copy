@@ -40,9 +40,9 @@ default_dict = dict(
         ],
         startbtn=[
             dict(activated_on=dict(background='rgb(200,200,200)', color=BLACK)),
-            dict(activated_off=dict(background='rgb(100,100,100)', color=BLACK)),
-            dict(deactivated_on=dict(background='rgb(130,130,130)', color='rgb(44,44,44)')),
-            dict(deactivated_off=dict(background='rgb(100,100,100)', color='rgb(33,33,33)')),
+            dict(activated_off=dict(background='rgb(130,130,130)', color=BLACK)),
+            dict(deactivated_on=dict(background='rgb(70,70,70)', color='rgb(35,35,35)')),
+            dict(deactivated_off=dict(background='rgb(70,70,70)', color='rgb(33,33,33)')),
         ],
         includefile=[
             dict(deactivated_on=dict(background='rgb(130,230,130)', color=BLACK)),
