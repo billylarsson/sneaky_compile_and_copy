@@ -70,7 +70,7 @@ class FromEdit(ToFromLineEdits):
             style(s, color=GRAY)
         t.signal_highlight()
 
-class ToEdit(ToFromLineEdits):
+class ToEdit(FromEdit):
     """"""
 class ZipEdit(ToFromLineEdits):
     """"""
@@ -259,8 +259,8 @@ class StartBTN(HighlightLabel):
 
             tofolder = s.main.toedit.text()
             src = [x.text().rstrip(os.sep) for x in s.main.included.widgets]
-            dst_startswith = s.main.toedit.text().rstrip(os.sep) + os.sep
-            combo = [dict(source=x, destination=dst_startswith + x[len(s.main.fromedit.text()):]) for x in src]
+            dst_startswith = s.main.toedit.text().rstrip(os.sep)
+            combo = [dict(source=x, destination=dst_startswith + os.sep + x[len(s.main.fromedit.text()):].strip(os.sep)) for x in src]
 
             for i in [x for x in combo if os.path.isdir(x['source'])]:
                 src = i['source']
@@ -329,7 +329,7 @@ class StartBTN(HighlightLabel):
                                 make_fadelabel(s.main, 'A HASH THING ERROR HAS OCCURRED FOR:\n' + dst, fontsize=36)
                                 return
                         else:
-                            make_fadelabel(s.main, 'COPY FAILED FROM:\n' + scr, fontsize=36)
+                            make_fadelabel(s.main, 'COPY FAILED FROM:\n' + src, fontsize=36)
                             return
 
         s.activation_toggle(force=False)
