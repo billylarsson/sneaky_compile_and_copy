@@ -53,7 +53,7 @@ default_dict = dict(
             dict(deactivated_off=dict(background=DARKOLIVEGREEN4, color=BLACK)),
         ],
         includefileunchanged=[
-            dict(deactivated_on=dict(background='rgb(155,155,155)', color=BLACK)),
+            dict(deactivated_on=dict(background='rgb(155,155,155)',  color=BLACK)),
             dict(deactivated_off=dict(background='rgb(115,115,115)', color=BLACK)),
         ],
         includefiledelete=[
